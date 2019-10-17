@@ -182,7 +182,6 @@ public class VaOauthRobot {
   private void enterCredentials(WebDriver driver) {
     log.info("Loading {}", config.authorization().asUrl());
     driver.get(config.authorization().asUrl());
-
     config.oauthLoginDriver().login(driver, config.user());
   }
 
@@ -260,7 +259,7 @@ public class VaOauthRobot {
   }
 
   private String waitForUrlToChange(WebDriver driver, String url) {
-    new WebDriverWait(driver, 1, 100)
+    new WebDriverWait(driver, config.navigationTimeout(), 100)
         .until(ExpectedConditions.not(ExpectedConditions.urlToBe(url)));
     return driver.getCurrentUrl();
   }
@@ -294,6 +293,8 @@ public class VaOauthRobot {
     @Default OAuthCredentialsType credentialsType = OAuthCredentialsType.ID_ME;
 
     @Default boolean skipTwoFactorAuth = true;
+
+    long navigationTimeout;
 
     @Getter private OauthLoginDriver oauthLoginDriver;
 

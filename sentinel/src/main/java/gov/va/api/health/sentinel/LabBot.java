@@ -45,6 +45,7 @@ import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 @Slf4j
 @Value
@@ -124,6 +125,7 @@ public class LabBot {
             .oauthLoginDriver(loginDriver)
             .headless(config.headless())
             .credentialsMode(credentialsMode)
+            .navigationTimeout(config.navigationTimeout())
             .build();
 
     return VaOauthRobot.of(configuration);
@@ -296,6 +298,10 @@ public class LabBot {
       return BooleanUtils.toBoolean(valueOf("webdriver.chrome.headless"));
     }
 
+    long navigationTimeout() {
+      return NumberUtils.toLong(valueOf("va-oauth-robot.navigation-timeout-seconds", "3"), 3);
+    }
+
     String redirectUrl() {
       return valueOf("va-oauth-robot.redirect-url");
     }
@@ -316,6 +322,10 @@ public class LabBot {
       String value = properties.getProperty(name, "");
       assertThat(value).withFailMessage("System property %s must be specified.", name).isNotBlank();
       return value;
+    }
+
+    private String valueOf(String name, String defaultValue) {
+      return properties.getProperty(name, defaultValue);
     }
   }
 
