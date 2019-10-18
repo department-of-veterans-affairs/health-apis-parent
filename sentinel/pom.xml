@@ -4,7 +4,7 @@
   <parent>
     <groupId>gov.va.api.health</groupId>
     <artifactId>health-apis-parent</artifactId>
-    <version>3.1.11-SNAPSHOT</version>
+    <version>3.1.11</version>
   </parent>
   <artifactId>sentinel</artifactId>
   <packaging>jar</packaging>
@@ -25,7 +25,7 @@
     <dependency>
       <groupId>gov.va.api.health</groupId>
       <artifactId>service-auto-config</artifactId>
-      <version>3.1.11-SNAPSHOT</version>
+      <version>3.1.11</version>
     </dependency>
     <dependency>
       <groupId>io.rest-assured</groupId>
