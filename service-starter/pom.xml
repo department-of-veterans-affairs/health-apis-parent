@@ -11,7 +11,7 @@
   <properties>
     <docker-maven-plugin.version>0.24.0</docker-maven-plugin.version>
     <docker.organization>vasdvp</docker.organization>
-    <docker.baseImage>vasdvp/health-apis-application-base</docker.baseImage>
+    <docker.baseImage>vasdvp/health-apis-spring-boot-application-base</docker.baseImage>
     <docker.baseVersion>jdk-12</docker.baseVersion>
     <docker.tag>latest</docker.tag>
     <docker.imageName>health-apis-${project.artifactId}</docker.imageName>
