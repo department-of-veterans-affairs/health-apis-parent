@@ -5,11 +5,14 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
 @UtilityClass
 public final class SentinelProperties {
+
+  private static final ReducedSpamLogger log =
+      ReducedSpamLogger.builder().logger(LoggerFactory.getLogger(SentinelProperties.class)).build();
+
   /** Supplies system property access-token, or throws exception if it doesn't exist. */
   public static String magicAccessToken() {
     final String magic = System.getProperty("access-token");
@@ -27,7 +30,7 @@ public final class SentinelProperties {
     if (!apiPath.endsWith("/")) {
       apiPath = apiPath + "/";
     }
-    log.info("Using {} api path {} (Override with -D{}=<url>)", name, apiPath, property);
+    log.infoOnce("Using {} api path {} (Override with -D{}=<url>)", name, apiPath, property);
     return apiPath;
   }
 
@@ -38,7 +41,7 @@ public final class SentinelProperties {
     if (url.endsWith("/")) {
       url = url.substring(0, url.length() - 1);
     }
-    log.info("Using {} url {} (Override with -D{}=<url>)", name, url, property);
+    log.infoOnce("Using {} url {} (Override with -D{}=<url>)", name, url, property);
     return url;
   }
 
@@ -53,7 +56,7 @@ public final class SentinelProperties {
         log.warn("Bad thread count {}, assuming {}", maybeNumber, threads);
       }
     }
-    log.info("Using {} threads (Override with -D{}=<number>)", threads, name);
+    log.infoOnce("Using {} threads (Override with -D{}=<number>)", threads, name);
     return threads;
   }
 }
