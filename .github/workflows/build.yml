@@ -22,4 +22,5 @@ jobs:
           --settings settings.xml \
           -Ddocker.skip=true \
           -Dhealth-apis-releases.nexus.user=$HEALTH_APIS_RELEASES_NEXUS_USERNAME \
-          -Dhealth-apis-releases.nexus.passwo\rd=$HEALTH_APIS_RELEASES_NEXUS_PASSWORD
+          -Dhealth-apis-releases.nexus.passwo\rd=$HEALTH_APIS_RELEASES_NEXUS_PASSWORD \
+       du -h -s  ~/.m2
