@@ -14,8 +14,8 @@ jobs:
         java-version: 12
     - name: Build
       env:
-        HEALTH_APIS_RELEASES_NEXUS_USERNAME: ${{ secret.HEALTH_APIS_RELEASES_NEXUS_USERNAME }}
-        HEALTH_APIS_RELEASES_NEXUS_PASSWORD: ${{ secret.HEALTH_APIS_RELEASES_NEXUS_PASSWORD }}
+        HEALTH_APIS_RELEASES_NEXUS_USERNAME: ${{ secrets.HEALTH_APIS_RELEASES_NEXUS_USERNAME }}
+        HEALTH_APIS_RELEASES_NEXUS_PASSWORD: ${{ secrets.HEALTH_APIS_RELEASES_NEXUS_PASSWORD }}
       run: |
         mvn -B package \
           --file pom.xml \
