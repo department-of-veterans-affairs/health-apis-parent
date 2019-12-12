@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+  <pluginGroups>
+    <pluginGroup>org.mule.tools</pluginGroup>
+  </pluginGroups>
+
+  <servers>
+   <server>
+     <id>health-apis-releases</id>
+      <username>${health-apis-releases.nexus.user}</username>
+      <password>${health-apis-releases.nexus.password}</password>
+   </server>
+ </servers>
+
+  <profiles>
+
+    <profile>
+      <id>gov.va.api.health</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <repositories>
+        <repository>
+          <id>health-apis-releases</id>
+          <url>https://tools.health.dev-developer.va.gov/nexus/repository/health-apis-releases/</url>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        <pluginRepository>
+          <id>health-apis-releases</id>
+          <url>https://tools.health.dev-developer.va.gov/nexus/repository/health-apis-releases/</url>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+
+  </profiles>
+</settings>
