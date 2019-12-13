@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE, ElementType.METHOD})
 public @interface Loggable {
   /** Log arguments in ENTER messages. */
-  boolean arguments() default true;
+         boolean arguments() default true;
 
   /** Log ENTER messages. */
   boolean enter() default true;

@@ -30,3 +30,10 @@ jobs:
           -Dhealth-apis-releases.nexus.user=$HEALTH_APIS_RELEASES_NEXUS_USERNAME \
           -Dhealth-apis-releases.nexus.passwo\rd=$HEALTH_APIS_RELEASES_NEXUS_PASSWORD
         find ~/.m2/repository/ -type d -name "*-SNAPSHOT" -exec rm -rf {} \;
+   - uses: stefanzweifel/git-auto-commit-action@v2.4.0
+     env:
+       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+     with:
+       commit_message: AUTOMATIC - formatting
+       branch: ${{ github.head_ref }}
+
