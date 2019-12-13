@@ -29,4 +29,4 @@ jobs:
           -Ddocker.skip=true \
           -Dhealth-apis-releases.nexus.user=$HEALTH_APIS_RELEASES_NEXUS_USERNAME \
           -Dhealth-apis-releases.nexus.passwo\rd=$HEALTH_APIS_RELEASES_NEXUS_PASSWORD
-        find /Users/bryanschofield/.m2/repository/ -type d -name "*-SNAPSHOT" -exec rm -rf {} \;
+        find ~/.m2/repository/ -type d -name "*-SNAPSHOT" -exec rm -rf {} \;
