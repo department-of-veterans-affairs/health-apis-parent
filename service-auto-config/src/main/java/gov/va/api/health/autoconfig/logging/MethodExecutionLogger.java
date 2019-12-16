@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import lombok.Value;
 import lombok.experimental.Delegate;
@@ -15,6 +16,8 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * This aspect is used to automatically log entry and exit of Controller methods that are annotated
@@ -44,13 +47,13 @@ public class MethodExecutionLogger {
         context
             .log()
             .info(
-                "ENTER {} {} {} {}",
+                "ENTER {} {} {} {} {}",
                 context.id(),
                 context.level(),
                 context.method().getName(),
-                context.argumentsAsString());
+                context.argumentsAsString(),
+                context.requestUri().replaceAll("[\r\n]", ""));
       }
-
       Throwable thrown = null;
       try {
         return point.proceed();
@@ -76,8 +79,11 @@ public class MethodExecutionLogger {
 
   @Getter
   private static class SharedState {
+
     private final String id;
+
     private int level;
+
     private List<String> timings;
 
     SharedState() {
@@ -102,13 +108,22 @@ public class MethodExecutionLogger {
    */
   @Value
   private class Context implements AutoCloseable {
+
     ProceedingJoinPoint point;
+
     long start;
+
     Logger log;
+
     Method method;
+
     Loggable annotation;
+
     boolean startOfLoggingChain;
+
     @Delegate SharedState state;
+
+    HttpServletRequest request;
 
     /**
      * Create a new context extracting information from the point. This context will use or set it's
@@ -120,7 +135,8 @@ public class MethodExecutionLogger {
       log = LoggerFactory.getLogger(point.getSignature().getDeclaringType());
       method = MethodSignature.class.cast(point.getSignature()).getMethod();
       annotation = method.getAnnotation(Loggable.class);
-
+      request =
+          ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
       /*
        * The ID and level need to be determined based on the thread. The ID and previous level may
        * have already be set by an earlier loggable method or this could the be first. If available,
@@ -189,6 +205,18 @@ public class MethodExecutionLogger {
       long elapsed = System.currentTimeMillis() - start;
       state.timings().add(method.getName() + " " + elapsed);
       return elapsed;
+    }
+
+    /** Get the request URI for logging. */
+    String requestUri() {
+      // We don't want this printed every time we ENTER somewhere. Do it only on the top level.
+      if (state.level() != 1) {
+        return "";
+      }
+      String uri = request.getRequestURI();
+      String query = request.getQueryString();
+
+      return query == null ? uri : uri + "?" + query;
     }
 
     /**
