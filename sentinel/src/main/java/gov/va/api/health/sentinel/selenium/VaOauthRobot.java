@@ -363,6 +363,9 @@ public class VaOauthRobot {
     @JsonProperty("expires_at")
     long expiresAt;
 
+    @JsonProperty("expires_in")
+    long expiresIn;
+
     @JsonProperty("scope")
     String scope;
 
