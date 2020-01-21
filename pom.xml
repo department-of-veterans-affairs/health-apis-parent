@@ -18,7 +18,7 @@
     <fixcrlf.includes>pom.xml,*.md,src/**</fixcrlf.includes>
     <fmt-maven-plugin.version>2.3.0</fmt-maven-plugin.version>
     <formatter-maven-plugin.version>2.7.5</formatter-maven-plugin.version>
-    <git.allowedBranchNames><![CDATA[^(master|release/.*|PR-[0-9]+|.*/[A-Z]{2,10}-[0-9]+-.*)$]]></git.allowedBranchNames>
+    <git.allowedBranchNames><![CDATA[^(master|release/.*|PR-[0-9]+|(.*/)?[A-Z]{2,10}-[0-9]+-.*)$]]></git.allowedBranchNames>
     <git.enforceBranchNames>true</git.enforceBranchNames>
     <gmavenplus-plugin.version>1.5</gmavenplus-plugin.version>
     <google-java-format.version>1.5</google-java-format.version>

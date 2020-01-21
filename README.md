@@ -17,7 +17,7 @@ This project provides starter POMs and shared libraries for Health APIs
   with the following plugins
   - [Lombok](https://projectlombok.org/)
   - [Google Java Format](https://github.com/google/google-java-format)
-- [git-secrets](https://github.com/awslabs/git-secrets)    
+- [git-secrets](https://github.com/awslabs/git-secrets)
 
 #### Maven
 - Formats Java, XML, and JSON files
@@ -27,13 +27,15 @@ This project provides starter POMs and shared libraries for Health APIs
 - Performs [SpotBugs](https://spotbugs.github.io/) analysis
   with [Find Security Bugs](http://find-sec-bugs.github.io/) extensions
 - Enforces Git branch naming conventions to support Jira integration
+  - Allowed examples: `master`, `release/*`, `PR-123`,
+    `task/SHANK-42-improve-queries-performance`, `SHANK-42-improve-query-performance`
 
 The above build steps can be skipped for use with IDE launch support by disabling the
 _standard_ profile, e.g. `mvn -P'!standard' package`
 
 #### git-secrets
 git-secrets must be installed and configured to scan for AWS entries and the patterns in
-[.git-secrets-patterns](.git-secrets-patterns). Exclusions are managed in 
+[.git-secrets-patterns](.git-secrets-patterns). Exclusions are managed in
 [.gitallowed](.gitallowed).
 git-secrets should be enabled with the following commands:
 
