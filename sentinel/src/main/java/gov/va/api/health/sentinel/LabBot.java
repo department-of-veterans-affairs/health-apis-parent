@@ -193,8 +193,7 @@ public class LabBot {
     ex.shutdown();
     ex.awaitTermination(10, TimeUnit.MINUTES);
     String errors =
-        futures
-            .stream()
+        futures.stream()
             .map(
                 f -> {
                   try {

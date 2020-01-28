@@ -229,10 +229,7 @@ public class MethodExecutionLogger {
         return "";
       }
       return "["
-          + state
-              .timings()
-              .subList(0, state.timings().size() - 1)
-              .stream()
+          + state.timings().subList(0, state.timings().size() - 1).stream()
               .collect(Collectors.joining(","))
           + "]";
     }

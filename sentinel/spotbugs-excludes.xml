@@ -1,13 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
-    <!-- URL is determined by a properties file and is not user controlled -->
-    <Match>
-        <Class name="gov.va.api.health.sentinel.LabBot"/>
-        <Bug pattern="URLCONNECTION_SSRF_FD"/>
-    </Match>
-    <!-- Path is determined by test class and not user controlled -->
-    <Match>
-        <Class name="gov.va.api.health.sentinel.LabBot$Config"/>
-        <Bug pattern="PATH_TRAVERSAL_IN"/>
-    </Match>
+  <!-- URL is determined by a properties file and is not user controlled -->
+  <Match>
+    <Class name="gov.va.api.health.sentinel.LabBot"/>
+    <Bug pattern="URLCONNECTION_SSRF_FD"/>
+  </Match>
+  <!-- Password is set by system property, not hardcoded -->
+  <Match>
+    <Or>
+      <Class name="gov.va.api.health.sentinel.LabBot"/>
+      <Class name="gov.va.api.health.sentinel.LabBot$Config"/>
+    </Or>
+    <Bug pattern="HARD_CODE_PASSWORD"/>
+  </Match>
+  <!-- Path is determined by test class and not user controlled -->
+  <Match>
+    <Class name="gov.va.api.health.sentinel.LabBot$Config"/>
+    <Bug pattern="PATH_TRAVERSAL_IN"/>
+  </Match>
 </FindBugsFilter>
