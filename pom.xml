@@ -12,13 +12,13 @@
   <version>5.0.4-SNAPSHOT</version>
   <packaging>pom</packaging>
   <properties>
-    <checkstyle.version>8.28</checkstyle.version>
+    <checkstyle.version>8.29</checkstyle.version>
     <findsecbugs-plugin.version>1.10.1</findsecbugs-plugin.version>
     <fixcrlf.excludes>**/*.png,**/*.jks,**/*.db</fixcrlf.excludes>
     <fixcrlf.includes>pom.xml,*.md,src/**</fixcrlf.includes>
     <fmt-maven-plugin.version>2.9</fmt-maven-plugin.version>
     <formatter-maven-plugin.version>2.11.0</formatter-maven-plugin.version>
-    <git.allowedBranchNames><![CDATA[^(master|release/.*|PR-[0-9]+|(.*/)?[A-Z]{2,10}-[0-9]+-.*)$]]></git.allowedBranchNames>
+    <git.allowedBranchNames><![CDATA[^(dependabot/.*|master|release/.*|PR-[0-9]+|(.*/)?[A-Z]{2,10}-[0-9]+-.*)$]]></git.allowedBranchNames>
     <git.enforceBranchNames>true</git.enforceBranchNames>
     <gmavenplus-plugin.version>1.8.1</gmavenplus-plugin.version>
     <google-java-format.version>1.7</google-java-format.version>
