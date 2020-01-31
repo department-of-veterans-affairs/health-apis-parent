@@ -206,6 +206,43 @@ public class VaOauthRobot {
     }
   }
 
+  /** Refresh the access token using the refresh token. */
+  public TokenExchange refreshUserAccessToken() {
+    TokenExchange oldAccessToken = token();
+    log.info("Getting a new access token for {} using the refresh token.", oldAccessToken.patient);
+    // Set up content-type and accept headers
+    RequestSpecification request =
+        RestAssured.given()
+            .contentType("application/x-www-form-urlencoded")
+            .accept("application/json");
+    // Set Up Basic Auth
+    request
+        .auth()
+        .preemptive()
+        .basic(config.authorization().clientId(), config.authorization().clientSecret());
+    // Set Up Body Of Message
+    request
+        .formParam("grant_type", "refresh_token")
+        .formParam("refresh_token", oldAccessToken.refreshToken());
+    // Get new Access Token
+    log.info("Sending refresh request to {}", config.tokenUrl());
+    TokenExchange newAccessToken =
+        request
+            .post(config.tokenUrl())
+            .then()
+            .assertThat()
+            .statusCode(200)
+            .extract()
+            .as(TokenExchange.class);
+    if (newAccessToken.isError()) {
+      throw new IllegalStateException(
+          "Failed to refresh token: " + token.error() + "\n" + token.errorDescription());
+    }
+    log.info("Success! Refreshed user {}'s access token!", oldAccessToken.patient());
+    log.info("Refreshed Token:\n {}", newAccessToken);
+    return newAccessToken;
+  }
+
   /** Return the token exchange, logging in if necessary. */
   public TokenExchange token() {
     if (token != null) {

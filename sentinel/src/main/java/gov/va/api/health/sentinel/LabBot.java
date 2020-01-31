@@ -127,7 +127,6 @@ public class LabBot {
             .credentialsMode(credentialsMode)
             .navigationTimeout(config.navigationTimeout())
             .build();
-
     return VaOauthRobot.of(configuration);
   }
 
@@ -151,7 +150,8 @@ public class LabBot {
                 LabBotUserResultBuilder resultBuilder =
                     LabBotUserResult.builder()
                         .user(tokenResult.user())
-                        .tokenExchange(tokenResult.tokenExchange());
+                        .tokenExchange(tokenResult.tokenExchange())
+                        .vaOauthRobot(tokenResult.vaOauthRobot());
                 try {
                   resultBuilder.response(
                       request(
@@ -239,6 +239,7 @@ public class LabBot {
                     LabBotUserResult.builder()
                         .user(userCredentials)
                         .tokenExchange(bot.token())
+                        .vaOauthRobot(bot)
                         .build());
               }));
     }
@@ -342,6 +343,8 @@ public class LabBot {
     UserCredentials user;
 
     TokenExchange tokenExchange;
+
+    VaOauthRobot vaOauthRobot;
 
     String response;
   }
