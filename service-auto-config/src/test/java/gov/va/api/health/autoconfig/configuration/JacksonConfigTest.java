@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import java.time.Instant;
 import java.util.function.Supplier;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -43,17 +44,34 @@ public class JacksonConfigTest {
 
   @Test
   @SneakyThrows
+  public void instantToISO8601() {
+    Popcorn yum = Popcorn.builder().pop(Instant.parse("2020-02-03T23:44:52Z")).build();
+    ObjectMapper mapper = JacksonConfig.createMapper();
+    assertThat(mapper.writeValueAsString(yum)).isEqualTo("{\"pop\":\"2020-02-03T23:44:52Z\"}");
+  }
+
+  @Test
+  @SneakyThrows
   public void trimsWhiteSpace() {
     CandyYaml in = CandyYaml.builder().ya("   spaces    ").ml(1).build();
     ObjectMapper mapper = JacksonConfig.createMapper();
     assertThat(mapper.writeValueAsString(in)).isEqualTo("{\"ya\":\"spaces\",\"ml\":1}");
   }
 
+  @Value
+  @Builder
+  public static class Popcorn {
+
+    Instant pop;
+  }
+
   @SuppressWarnings("WeakerAccess")
   @Value
   @Builder
   public static class CandyYaml {
+
     String ya;
+
     int ml;
   }
 
@@ -63,6 +81,7 @@ public class JacksonConfigTest {
   @AllArgsConstructor
   @Builder(builderClassName = "CannotAutoDetactMe", builderMethodName = "unconventional")
   public static class HasPrivateDefaultConstructor {
+
     String ok;
   }
 }

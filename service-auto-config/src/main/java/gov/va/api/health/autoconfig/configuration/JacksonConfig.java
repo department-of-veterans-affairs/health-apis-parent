@@ -94,7 +94,9 @@ public class JacksonConfig {
         .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
         .enable(MapperFeature.AUTO_DETECT_FIELDS)
         .setSerializationInclusion(Include.NON_NULL)
-        .setVisibility(PropertyAccessor.ALL, Visibility.ANY);
+        .setVisibility(PropertyAccessor.ALL, Visibility.ANY)
+        // StdDateFormat is ISO8601 since jackson 2.9
+        .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
   }
 
   /**
