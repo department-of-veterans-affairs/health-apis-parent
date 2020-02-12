@@ -12,6 +12,7 @@ import java.security.cert.CertificateException;
 import java.util.function.Supplier;
 import javax.net.ssl.SSLContext;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpClient;
@@ -25,9 +26,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
+import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.ResourceUtils;
@@ -44,6 +46,36 @@ import org.springframework.web.client.RestTemplate;
 @AllArgsConstructor(onConstructor = @__({@Autowired}))
 public class SecureRestTemplateConfig {
   private final SslClientProperties config;
+
+  @SneakyThrows
+  private static ClientHttpResponse executeAndLog(
+      HttpRequest request, byte[] body, ClientHttpRequestExecution execution) {
+    log.info("{} {}", request.getMethod(), request.getURI());
+    ClientHttpResponse response = execution.execute(request, body);
+    if (response.getStatusCode().isError()) {
+      log.error("--- REQUEST FAILED ---------------------------------");
+      log.error("{} {}", request.getMethod(), request.getURI());
+      log.error("Headers: {}", request.getHeaders());
+      log.error("Request Body:\n{}", new String(body, StandardCharsets.UTF_8));
+      log.error("--- RESPONSE ---------------------------------------");
+      log.error(
+          "Response: {} ({})",
+          response.getStatusCode(),
+          response.getStatusCode().getReasonPhrase());
+      log.error("Headers: {}", response.getHeaders());
+      log.error(
+          "Response Body:\n{}",
+          StreamUtils.copyToString(response.getBody(), StandardCharsets.UTF_8));
+      log.error("----------------------------------------------------");
+    } else {
+      log.info(
+          "Response from {} {} is {}",
+          request.getMethod(),
+          request.getURI(),
+          response.getStatusCode());
+    }
+    return response;
+  }
 
   private Supplier<ClientHttpRequestFactory> bufferingRequestFactory(HttpClient client) {
     return () ->
@@ -80,36 +112,6 @@ public class SecureRestTemplateConfig {
     }
   }
 
-  private ClientHttpRequestInterceptor loggingInterceptor() {
-    return (request, body, execution) -> {
-      log.info("{} {}", request.getMethod(), request.getURI());
-      ClientHttpResponse response = execution.execute(request, body);
-      if (response.getStatusCode().isError()) {
-        log.error("--- REQUEST FAILED ---------------------------------");
-        log.error("{} {}", request.getMethod(), request.getURI());
-        log.error("Headers: {}", request.getHeaders());
-        log.error("Request Body:\n{}", new String(body, StandardCharsets.UTF_8));
-        log.error("--- RESPONSE ---------------------------------------");
-        log.error(
-            "Response: {} ({})",
-            response.getStatusCode(),
-            response.getStatusCode().getReasonPhrase());
-        log.error("Headers: {}", response.getHeaders());
-        log.error(
-            "Response Body:\n{}",
-            StreamUtils.copyToString(response.getBody(), StandardCharsets.UTF_8));
-        log.error("----------------------------------------------------");
-      } else {
-        log.info(
-            "Response from {} {} is {}",
-            request.getMethod(),
-            request.getURI(),
-            response.getStatusCode());
-      }
-      return response;
-    };
-  }
-
   /**
    * Creates a RestTemplate that is configured to SSL. It will also have a logging interceptor that
    * will record information on a service call failure.
@@ -118,7 +120,7 @@ public class SecureRestTemplateConfig {
   public RestTemplate restTemplate(@Autowired RestTemplateBuilder restTemplateBuilder) {
     return restTemplateBuilder
         .requestFactory(bufferingRequestFactory(httpClientWithSsl()))
-        .additionalInterceptors(loggingInterceptor())
+        .additionalInterceptors((req, body, exec) -> executeAndLog(req, body, exec))
         .build();
   }
 

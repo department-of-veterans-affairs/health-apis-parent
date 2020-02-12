@@ -5,13 +5,11 @@ import java.util.List;
 import java.util.function.Function;
 import lombok.Builder;
 import lombok.NonNull;
-import lombok.Singular;
 
 public class LogSanitizer implements Function<String, String> {
-
   /** A default, shared instance. */
   private static final LogSanitizer INSTANCE =
-      LogSanitizer.builder().action(preventCrlfInjection()).build();
+      LogSanitizer.builder().actions(List.of(preventCrlfInjection())).build();
 
   /**
    * Collection of actions to take when sanitizing strings. Actions will be invoked in order,
@@ -22,7 +20,7 @@ public class LogSanitizer implements Function<String, String> {
 
   @SuppressWarnings("unchecked")
   @Builder
-  private LogSanitizer(@NonNull @Singular List<Function<String, String>> actions) {
+  private LogSanitizer(@NonNull List<Function<String, String>> actions) {
     this.actions = new ArrayList<>(actions);
   }
 

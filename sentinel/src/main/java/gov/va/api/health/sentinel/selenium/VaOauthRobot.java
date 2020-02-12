@@ -5,11 +5,11 @@ import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Splitter;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
@@ -21,7 +21,6 @@ import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.Singular;
 import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +38,6 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 @Slf4j
 @RequiredArgsConstructor(staticName = "of")
 public class VaOauthRobot {
-
   @Getter @NonNull private final Configuration config;
 
   private String code;
@@ -150,7 +148,7 @@ public class VaOauthRobot {
       /*
        * There are possibly two consent forms.
        */
-      url = waitForUrlToChange(driver, url);
+      waitForUrlToChange(driver, url);
       checkForConsentForm(driver);
       checkForConsentForm(driver);
       checkForMatchingError(driver);
@@ -190,12 +188,14 @@ public class VaOauthRobot {
         .until(ExpectedConditions.urlContains(config.authorization().redirectUrl()));
     String url = driver.getCurrentUrl();
     log.info("Redirected {}", url);
-    return Arrays.stream(url.split("\\?")[1].split("&"))
-        .filter(p -> p.startsWith("code="))
-        .findFirst()
-        .orElseThrow(
-            () -> new RuntimeException("Cannot find code in url " + driver.getCurrentUrl()))
-        .split("=")[1];
+    String params = Splitter.onPattern("\\?").splitToList(url).get(1);
+    String codeParam =
+        Splitter.on("&").splitToList(params).stream()
+            .filter(p -> p.startsWith("code="))
+            .findFirst()
+            .orElseThrow(
+                () -> new RuntimeException("Cannot find code in url " + driver.getCurrentUrl()));
+    return Splitter.on("=").splitToList(codeParam).get(1);
   }
 
   private Optional<WebElement> findOptionalElement(WebDriver driver, By by) {
@@ -314,7 +314,6 @@ public class VaOauthRobot {
   @Value
   @Builder
   public static class Configuration {
-
     @NonNull Authorization authorization;
 
     @NonNull String tokenUrl;
@@ -338,7 +337,6 @@ public class VaOauthRobot {
     @Value
     @Builder
     public static class Authorization {
-
       @NonNull String authorizeUrl;
 
       @NonNull String redirectUrl;
@@ -351,7 +349,7 @@ public class VaOauthRobot {
 
       @NonNull String aud;
 
-      @Singular Set<String> scopes;
+      @NonNull Set<String> scopes;
 
       @SneakyThrows
       String asUrl() {
@@ -373,7 +371,6 @@ public class VaOauthRobot {
     @Value
     @Builder
     public static class UserCredentials {
-
       @NonNull String id;
 
       @NonNull String password;
@@ -384,7 +381,6 @@ public class VaOauthRobot {
   @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
   @AllArgsConstructor
   public static class TokenExchange {
-
     @JsonProperty("error")
     String error;
 

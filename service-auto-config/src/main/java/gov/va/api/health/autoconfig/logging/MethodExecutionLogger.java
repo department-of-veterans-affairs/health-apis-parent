@@ -1,8 +1,8 @@
 package gov.va.api.health.autoconfig.logging;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
@@ -26,13 +26,12 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @Aspect
 @Component
 public class MethodExecutionLogger {
-
   /**
    * Some state is shared by loggable methods in the same thread. This is used to track the IDs,
    * loggable stack level, etc. See the Context below that is responsible for initializing the value
    * per thread if it is not already set.
    */
-  private final ThreadLocal<SharedState> sharedState = new ThreadLocal<>();
+  private static final ThreadLocal<SharedState> sharedState = new ThreadLocal<>();
 
   /** Log enter and leave messages based on the presence of Loggable or GetMapping annotations. */
   @Around(
@@ -89,7 +88,7 @@ public class MethodExecutionLogger {
     SharedState() {
       id = String.format("%6X", System.currentTimeMillis() & 0xFFFFFF);
       level = 1;
-      timings = new LinkedList<>();
+      timings = new ArrayList<>();
     }
 
     void levelDown() {
@@ -107,7 +106,7 @@ public class MethodExecutionLogger {
    * Context instances must be closed after creation for proper management.
    */
   @Value
-  private class Context implements AutoCloseable {
+  private static class Context implements AutoCloseable {
 
     ProceedingJoinPoint point;
 

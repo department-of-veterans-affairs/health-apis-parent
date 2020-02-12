@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
 import gov.va.api.health.sentinel.LabBot.LabBotUserResult.LabBotUserResultBuilder;
 import gov.va.api.health.sentinel.selenium.IdMeOauthLoginDriver;
@@ -13,7 +14,6 @@ import gov.va.api.health.sentinel.selenium.OauthLoginDriver;
 import gov.va.api.health.sentinel.selenium.VaOauthRobot;
 import gov.va.api.health.sentinel.selenium.VaOauthRobot.Configuration;
 import gov.va.api.health.sentinel.selenium.VaOauthRobot.Configuration.Authorization;
-import gov.va.api.health.sentinel.selenium.VaOauthRobot.Configuration.Authorization.AuthorizationBuilder;
 import gov.va.api.health.sentinel.selenium.VaOauthRobot.Configuration.UserCredentials;
 import gov.va.api.health.sentinel.selenium.VaOauthRobot.OAuthCredentialsMode;
 import gov.va.api.health.sentinel.selenium.VaOauthRobot.OAuthCredentialsType;
@@ -26,7 +26,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -50,7 +49,6 @@ import org.apache.commons.lang3.math.NumberUtils;
 @Slf4j
 @Value
 public class LabBot {
-
   @NonNull List<String> scopes;
 
   @Getter(AccessLevel.PRIVATE)
@@ -75,7 +73,7 @@ public class LabBot {
 
   /** Gets all Lab users. */
   public static List<String> allUsers() {
-    List<String> allUsers = new LinkedList<>();
+    List<String> allUsers = new ArrayList<>(100);
     for (int i = 1; i <= 5; i++) {
       allUsers.add("vasdvp+IDME_" + String.format("%02d", i) + "@gmail.com");
     }
@@ -86,18 +84,15 @@ public class LabBot {
   }
 
   private Authorization makeAuthorization(SmartOnFhirUrls urls) {
-    AuthorizationBuilder authorizationBuilder = Authorization.builder();
-    authorizationBuilder
+    return Authorization.builder()
         .clientId(config.clientId())
         .clientSecret(config.clientSecret())
         .authorizeUrl(urls.authorize())
         .redirectUrl(config.redirectUrl())
         .state(config.state())
-        .aud(config.aud());
-    for (String scope : scopes) {
-      authorizationBuilder.scope(scope);
-    }
-    return authorizationBuilder.build();
+        .aud(config.aud())
+        .scopes(ImmutableSet.copyOf(scopes))
+        .build();
   }
 
   /**
@@ -447,7 +442,7 @@ public class LabBot {
     private static Optional<JsonNode> getParentWith(
         JsonNode node, @NonNull String key, @NonNull String value) {
       for (JsonNode checkNode : node) {
-        if ((value).equals(checkNode.path(key).textValue())) {
+        if (value.equals(checkNode.path(key).textValue())) {
           return Optional.of(checkNode);
         }
       }

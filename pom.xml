@@ -9,10 +9,11 @@
   </parent>
   <groupId>gov.va.api.health</groupId>
   <artifactId>health-apis-parent</artifactId>
-  <version>5.0.6-SNAPSHOT</version>
+  <version>6.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <properties>
     <checkstyle.version>8.29</checkstyle.version>
+    <error-prone.version>2.3.4</error-prone.version>
     <findsecbugs-plugin.version>1.10.1</findsecbugs-plugin.version>
     <fixcrlf.excludes>**/*.png,**/*.jks,**/*.db</fixcrlf.excludes>
     <fixcrlf.includes>pom.xml,*.md,src/**</fixcrlf.includes>
@@ -110,6 +111,9 @@
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>
+      <properties>
+        <error-prone.args>-Xplugin:ErrorProne -XepDisableWarningsInGeneratedCode -Xep:MissingOverride:OFF</error-prone.args>
+      </properties>
       <build>
         <plugins>
           <!-- Compiler -->
@@ -119,20 +123,31 @@
             <executions>
               <execution>
                 <goals>
-                  <!-- Enable warnings for compile goal. (Not testCompile.) -->
                   <goal>compile</goal>
                 </goals>
                 <configuration>
                   <release>${java.version}</release>
                   <showWarnings>true</showWarnings>
                   <compilerArgs>
+                    <arg>-XDcompilePolicy=simple</arg>
+                    <arg>${error-prone.args}</arg>
                     <arg>-Xlint:all</arg>
-                    <!-- Suppress unknown annotation processing warnings. -->
                     <arg>-Xlint:-processing</arg>
-                    <!-- Java serialization is not used. -->
                     <arg>-Xlint:-serial</arg>
                     <arg>-Werror</arg>
                   </compilerArgs>
+                  <annotationProcessorPaths>
+                    <path>
+                      <groupId>org.projectlombok</groupId>
+                      <artifactId>lombok</artifactId>
+                      <version>${lombok.version}</version>
+                    </path>
+                    <path>
+                      <groupId>com.google.errorprone</groupId>
+                      <artifactId>error_prone_core</artifactId>
+                      <version>${error-prone.version}</version>
+                    </path>
+                  </annotationProcessorPaths>
                 </configuration>
               </execution>
             </executions>
