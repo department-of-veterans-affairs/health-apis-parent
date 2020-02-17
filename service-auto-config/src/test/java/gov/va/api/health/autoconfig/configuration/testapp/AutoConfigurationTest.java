@@ -23,7 +23,8 @@ public class AutoConfigurationTest {
 
   @Test(expected = RuntimeException.class)
   public void boom() {
-    rest.getForEntity("/boom", Fugazi.class);
+    ResponseEntity<Fugazi> f = rest.getForEntity("/hello", Fugazi.class);
+    rest.getForEntity("/boom?kaboom=kapow", Fugazi.class);
   }
 
   @Test

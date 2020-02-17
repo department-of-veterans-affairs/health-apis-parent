@@ -1,12 +1,23 @@
 package gov.va.api.health.autoconfig.logging;
 
+import static gov.va.api.health.autoconfig.logging.LogSanitizer.sanitize;
+
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.va.api.health.autoconfig.configuration.JacksonConfig;
 import java.lang.reflect.Method;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Deque;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.experimental.Delegate;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -42,61 +53,24 @@ public class MethodExecutionLogger {
           + "    || @annotation(org.springframework.web.bind.annotation.PostMapping)))")
   public Object log(ProceedingJoinPoint point) throws Throwable {
     try (Context context = new Context(point)) {
+      LogEntry entry = LogEntry.create(context);
       if (context.logStart()) {
-        context
-            .log()
-            .info(
-                "ENTER {} {} {} {} {}",
-                context.id(),
-                context.level(),
-                context.method().getName(),
-                context.argumentsAsString(),
-                context.requestUri().replaceAll("[\r\n]", ""));
+        context.log("ENTER {}", entry);
       }
-      Throwable thrown = null;
       try {
         return point.proceed();
-      } catch (Throwable oops) {
-        thrown = oops;
-        throw oops;
+      } catch (Throwable thrown) {
+        entry.exception(context.exceptionTypeAsString(thrown));
+        entry.message(context.exceptionMessageAsString(thrown));
+        context.markError();
+        throw thrown;
       } finally {
+        context.markTiming();
         if (context.logEnd()) {
-          context
-              .log()
-              .info(
-                  "LEAVE {} {} {} {} ms {} {}",
-                  context.id(),
-                  context.level(),
-                  context.method().getName(),
-                  context.markTiming(),
-                  context.timingSummary(),
-                  context.exceptionAsString(thrown));
+          entry.timing(context.timingSummary());
+          context.log("LEAVE {}", entry);
         }
       }
-    }
-  }
-
-  @Getter
-  private static class SharedState {
-
-    private final String id;
-
-    private int level;
-
-    private List<String> timings;
-
-    SharedState() {
-      id = String.format("%6X", System.currentTimeMillis() & 0xFFFFFF);
-      level = 1;
-      timings = new ArrayList<>();
-    }
-
-    void levelDown() {
-      level -= 1;
-    }
-
-    void levelUp() {
-      level += 1;
     }
   }
 
@@ -112,7 +86,9 @@ public class MethodExecutionLogger {
 
     long start;
 
-    Logger log;
+    Logger logger;
+
+    Class<?> declaringType;
 
     Method method;
 
@@ -131,8 +107,9 @@ public class MethodExecutionLogger {
     Context(ProceedingJoinPoint point) {
       this.point = point;
       start = System.currentTimeMillis();
-      log = LoggerFactory.getLogger(point.getSignature().getDeclaringType());
-      method = MethodSignature.class.cast(point.getSignature()).getMethod();
+      declaringType = point.getSignature().getDeclaringType();
+      logger = LoggerFactory.getLogger(declaringType);
+      method = ((MethodSignature) point.getSignature()).getMethod();
       annotation = method.getAnnotation(Loggable.class);
       request =
           ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
@@ -155,7 +132,9 @@ public class MethodExecutionLogger {
 
     /** If method arguments are enabled, return them. Otherwise return an empty string. */
     String argumentsAsString() {
-      return logArguments() ? Arrays.toString(point.getArgs()) : "";
+      return logArguments()
+          ? Stream.of(point.getArgs()).map(String::valueOf).collect(Collectors.joining(","))
+          : "";
     }
 
     /**
@@ -175,35 +154,59 @@ public class MethodExecutionLogger {
      * If exceptions are enabled and thrown is set, convert it to a simple string. Otherwise return
      * empty.
      */
-    String exceptionAsString(Throwable thrown) {
+    String exceptionMessageAsString(Throwable thrown) {
+      return thrown != null && logException() ? sanitize(thrown.getMessage()) : "";
+    }
+
+    /**
+     * If exceptions are enabled and thrown is set, convert it to a simple string. Otherwise return
+     * empty.
+     */
+    String exceptionTypeAsString(Throwable thrown) {
       return thrown != null && logException() ? thrown.getClass().getSimpleName() : "";
+    }
+
+    /** Log, or defer logging the message. This uses SLF4J logger semantics. */
+    void log(String message, Object... args) {
+      if (startOfLoggingChain) {
+        if (state().error()) {
+          state.deferredLogs().forEach(DeferredLog::logNow);
+        }
+        logger().info(message, args);
+      } else {
+        state().deferredLogs().add(new DeferredLog(logger(), message, args));
+      }
     }
 
     /** Return true if method arguments should be logged. */
     boolean logArguments() {
-      return log.isInfoEnabled() && (annotation == null || annotation.arguments());
+      return logger.isInfoEnabled() && (annotation == null || annotation.arguments());
     }
 
     /** Return true if end of invocation should be logged. */
     boolean logEnd() {
-      return log.isInfoEnabled() && (annotation == null || annotation.leave());
+      return logger.isInfoEnabled() && (annotation == null || annotation.leave());
     }
 
     /** Return true if exception summary should be logged. */
     boolean logException() {
-      return log.isInfoEnabled() && (annotation == null || annotation.exception());
+      return logger.isInfoEnabled() && (annotation == null || annotation.exception());
     }
 
     /** Return true if start of invocation should be logged. */
     boolean logStart() {
-      return log.isInfoEnabled() && (annotation == null || annotation.enter());
+      return logger.isInfoEnabled() && (annotation == null || annotation.enter());
+    }
+
+    /** Indicate an error has occurred, which will trigger additional logging. */
+    void markError() {
+      state.error(true);
     }
 
     /** Return how long has this been running. */
-    long markTiming() {
+    void markTiming() {
       long elapsed = System.currentTimeMillis() - start;
-      state.timings().add(method.getName() + " " + elapsed);
-      return elapsed;
+      state.timings().addFirst(method.getName() + " " + elapsed);
     }
 
     /** Get the request URI for logging. */
@@ -224,13 +227,97 @@ public class MethodExecutionLogger {
      * contained the top. So summary must also have at least one other entry.
      */
     String timingSummary() {
-      if (!startOfLoggingChain || state.timings().size() < 2) {
-        return "";
+      return String.join(",", state.timings());
+    }
+  }
+
+  /**
+   * Statements that are not the start of the thread (level 2 and beyond) will be deferred and only
+   * printed if an error occurs.
+   */
+  @Value
+  @AllArgsConstructor
+  private static class DeferredLog {
+    Logger logger;
+    String message;
+    Object[] args;
+
+    void logNow() {
+      logger.info(message, args);
+    }
+  }
+
+  @Data
+  @JsonPropertyOrder({"id", "level", "method", "request", "timing", "exception", "message"})
+  private static class LogEntry {
+    private static final ObjectMapper MAPPER = JacksonConfig.createMapper();
+
+    String id;
+
+    String method;
+
+    String timing;
+
+    String request;
+
+    String exception;
+
+    String message;
+
+    int level;
+
+    /** Create a new instance harvesting information from the context. */
+    private static LogEntry create(Context context) {
+      LogEntry entry =
+          new LogEntry()
+              .id(context.id())
+              .level(context.level())
+              .method(
+                  context.declaringType().getSimpleName()
+                      + "."
+                      + context.method().getName()
+                      + "("
+                      + context.argumentsAsString()
+                      + ")");
+      if (context.startOfLoggingChain()) {
+        entry.request(context.requestUri());
       }
-      return "["
-          + state.timings().subList(0, state.timings().size() - 1).stream()
-              .collect(Collectors.joining(","))
-          + "]";
+      return entry;
+    }
+
+    @Override
+    @SneakyThrows
+    public String toString() {
+      return MAPPER.writeValueAsString(this);
+    }
+  }
+
+  @Getter
+  private static class SharedState {
+
+    private final String id;
+
+    private int level;
+
+    private Deque<String> timings;
+
+    private List<DeferredLog> deferredLogs;
+
+    @Setter private boolean error;
+
+    SharedState() {
+      id = String.format("%6X", System.currentTimeMillis() & 0xFFFFFF);
+      level = 1;
+      timings = new ArrayDeque<>();
+      deferredLogs = new ArrayList<>();
+    }
+
+    void levelDown() {
+      level -= 1;
+    }
+
+    void levelUp() {
+      level += 1;
     }
   }
 }

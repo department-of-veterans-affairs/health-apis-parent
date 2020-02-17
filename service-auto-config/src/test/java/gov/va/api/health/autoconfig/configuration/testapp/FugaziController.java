@@ -4,6 +4,7 @@ import gov.va.api.health.autoconfig.configuration.testapp.Fugazi.CustomBuilder;
 import gov.va.api.health.autoconfig.configuration.testapp.Fugazi.Specified;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @SuppressWarnings("WeakerAccess")
@@ -13,8 +14,9 @@ public class FugaziController {
   @Autowired FugaziComponent fuz;
 
   @GetMapping(path = "/boom")
-  public Fugazi boom() {
-    throw new RuntimeException("FUGAZI " + fuz.now());
+  public Fugazi boom(
+      @RequestParam(name = "kaboom", defaultValue = "nope", required = false) String kaboom) {
+    throw new RuntimeException("FUGAZI " + fuz.now() + " " + kaboom);
   }
 
   @GetMapping(path = "/hello")
