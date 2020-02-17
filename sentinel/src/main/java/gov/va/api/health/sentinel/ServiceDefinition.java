@@ -26,12 +26,8 @@ public final class ServiceDefinition {
   /** Returns Request Specification. */
   public RequestSpecification requestSpecification() {
     RequestSpecification spec =
-        RestAssured.given()
-            .baseUri(url())
-            .port(port())
-            .relaxedHTTPSValidation()
-            .log()
-            .ifValidationFails();
+        RestAssured.given().baseUri(url()).port(port()).relaxedHTTPSValidation();
+
     Optional<String> token = accessToken.get();
     if (token.isPresent()) {
       spec = spec.header("Authorization", "Bearer " + token.get());
