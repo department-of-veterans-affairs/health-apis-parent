@@ -1,24 +1,55 @@
 package gov.va.api.health.sentinel;
 
+import static io.restassured.config.LogConfig.logConfig;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.va.api.health.autoconfig.configuration.JacksonConfig;
+import io.restassured.internal.support.Prettifier;
 import io.restassured.response.Response;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import lombok.AllArgsConstructor;
-import lombok.Value;
+import lombok.Data;
 
 /**
  * A decorator for the standard Rest Assured response that adds a little more error support, by
  * automatically logging everything if an validation occurs.
  */
-@Value
+@Data
 @AllArgsConstructor(staticName = "of")
 public class ExpectedResponse {
-  Response response;
+  /** The response from the HTTP request. */
+  private final Response response;
+
+  /** What should happen when logging failures. By default, everything will be logged. */
+  private Consumer<Response> logAction;
+
+  /** The default logging action that logs everything. */
+  public static Consumer<Response> logAll() {
+    return r -> r.then().log().all();
+  }
+
+  /** A logging action that logs everything, but if the body is too big, it will be truncated . */
+  public static Consumer<Response> logAllWithTruncatedBody(int max) {
+    return r -> {
+      r.then().log().status();
+      r.then().log().headers();
+      String body = new Prettifier().getPrettifiedBodyIfPossible(r, r.body());
+      if (body.length() > max) {
+        body = body.substring(0, max) + "... TRUNCATED ...";
+      }
+      logConfig().defaultStream().println(body);
+    };
+  }
+
+  /** Create a new instance that will log all on a failure. */
+  public static ExpectedResponse of(Response response) {
+    return of(response, logAll());
+  }
 
   /** Expect the HTTP status code to be the given value. */
   public ExpectedResponse expect(int statusCode) {
@@ -89,7 +120,7 @@ public class ExpectedResponse {
 
   @SuppressWarnings("UnusedReturnValue")
   ExpectedResponse log() {
-    response().then().log().all();
+    logAction.accept(response());
     return this;
   }
 }
