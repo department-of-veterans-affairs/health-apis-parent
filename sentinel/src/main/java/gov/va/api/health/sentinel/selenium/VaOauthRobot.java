@@ -113,7 +113,7 @@ public class VaOauthRobot {
     try {
       driver.findElement(By.className("btn-primary")).click();
       // If only application is setup for 2FA, this line will throw an exception and we can proceed
-      url = waitForUrlToChange(driver, url);
+      url = waitForUrlToChange(driver, url, Math.min(5, config().navigationTimeout()));
       log.info("Selecting phone 2FA path");
     } catch (Exception e) {
       log.info("Selecting code generator app 2FA path");
@@ -122,8 +122,14 @@ public class VaOauthRobot {
       System.out.print("Please enter the two-factor code: ");
       String twoFactorAuthCode = scanner.nextLine();
       WebElement enterCode = driver.findElement(By.id("multifactor_code"));
+      /*
+       * Type the 2FA code and press "enter" to submit. Pressing the "continue" button
+       * could sometimes be unreliable due to the time required to validate the response.
+       */
       enterCode.sendKeys(twoFactorAuthCode);
-      driver.findElement(By.name("button")).click();
+      enterCode.sendKeys("\n");
+
+      log.info("Submitted 2FA code");
       waitForUrlToChange(driver, url);
     }
   }
@@ -296,7 +302,13 @@ public class VaOauthRobot {
   }
 
   private String waitForUrlToChange(WebDriver driver, String url) {
-    new WebDriverWait(driver, config.navigationTimeout(), 100)
+    long timeOutInSeconds = config.navigationTimeout();
+    return waitForUrlToChange(driver, url, timeOutInSeconds);
+  }
+
+  private String waitForUrlToChange(WebDriver driver, String url, long timeOutInSeconds) {
+    log.info("Waiting on URL to change (timeout {})", timeOutInSeconds);
+    new WebDriverWait(driver, timeOutInSeconds, 100)
         .until(ExpectedConditions.not(ExpectedConditions.urlToBe(url)));
     return driver.getCurrentUrl();
   }
