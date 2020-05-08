@@ -6,12 +6,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.http.Method;
 import io.restassured.response.Response;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -40,6 +42,9 @@ public final class FhirTestClient implements TestClient {
 
   Supplier<ObjectMapper> mapper;
 
+  @Builder.Default
+  List<String> contentTypes = List.of("application/fhir+json", "application/json+fhir");
+
   @Override
   public ExpectedResponse get(String path, String... params) {
     return get(null, path, params);
@@ -59,54 +64,46 @@ public final class FhirTestClient implements TestClient {
       return ExpectedResponse.of(baselineResponseFuture.get(5, TimeUnit.MINUTES));
     }
 
-    Future<Response> fhirJsonResponseFuture =
-        executorService.submit(
-            () -> {
-              return get(headers, "application/fhir+json", path, params);
-            });
-    Future<Response> jsonFhirResponseFuture =
-        executorService.submit(
-            () -> {
-              return get(headers, "application/json+fhir", path, params);
-            });
+    // We dont want to run requests twice.
+    List<Future<Response>> crystalBall =
+        contentTypes.stream()
+            .distinct()
+            .filter(s -> !s.equals("application/json"))
+            .map(
+                contentType ->
+                    executorService.submit(
+                        () -> {
+                          return get(headers, contentType, path, params);
+                        }))
+            .collect(Collectors.toList());
 
     final Response baselineResponse = baselineResponseFuture.get(5, TimeUnit.MINUTES);
-    final Response fhirJsonResponse = fhirJsonResponseFuture.get(5, TimeUnit.MINUTES);
-    final Response jsonFhirResponse = jsonFhirResponseFuture.get(5, TimeUnit.MINUTES);
 
-    assertThat(fhirJsonResponse.getStatusCode())
-        .withFailMessage(
-            "status: application/json ("
-                + baselineResponse.getStatusCode()
-                + ") does not equal application/fhir+json ("
-                + fhirJsonResponse.getStatusCode()
-                + ")")
-        .isEqualTo(baselineResponse.getStatusCode());
-    assertThat(jsonFhirResponse.getStatusCode())
-        .withFailMessage(
-            "status: application/json ("
-                + baselineResponse.getStatusCode()
-                + ") does not equal application/json+fhir ("
-                + jsonFhirResponse.getStatusCode()
-                + ")")
-        .isEqualTo(baselineResponse.getStatusCode());
+    for (Future<Response> future : crystalBall) {
+      Response fhirResponse = future.get(5, TimeUnit.MINUTES);
 
-    if (baselineResponse.getStatusCode() >= 400) {
-      /*
-       * Error responses must be returned as OOs but contain a timestamp in the diagnostics
-       * that prevents direct comparison.
-       */
-      assertThat(
-              errorResponseEqualityCheck.equals(baselineResponse.body(), fhirJsonResponse.body()))
-          .isTrue();
-      assertThat(
-              errorResponseEqualityCheck.equals(baselineResponse.body(), jsonFhirResponse.body()))
-          .isTrue();
-    } else {
-      // OK responses
-      assertThat(baselineResponse.body().asString())
-          .isEqualTo(fhirJsonResponse.body().asString())
-          .isEqualTo(jsonFhirResponse.body().asString());
+      assertThat(fhirResponse.getStatusCode())
+          .withFailMessage(
+              "status: application/json ("
+                  + baselineResponse.getStatusCode()
+                  + ") does not equal "
+                  + fhirResponse.contentType()
+                  + "("
+                  + fhirResponse.getStatusCode()
+                  + ")")
+          .isEqualTo(baselineResponse.getStatusCode());
+
+      if (baselineResponse.getStatusCode() >= 400) {
+        /*
+         * Error responses must be returned as OOs but
+         * contains timestamps that prevents direct comparison
+         */
+        assertThat(errorResponseEqualityCheck.equals(baselineResponse.body(), fhirResponse.body()))
+            .isTrue();
+      } else {
+        // OK responses
+        assertThat(baselineResponse.body().asString()).isEqualTo(fhirResponse.body().asString());
+      }
     }
     return ExpectedResponse.of(baselineResponse);
   }
