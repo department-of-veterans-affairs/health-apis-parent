@@ -137,12 +137,15 @@ public final class FhirTestClient implements TestClient {
 
   @Override
   public ExpectedResponse post(String path, Object body) {
+    return post(
+        Map.of("Content-Type", "application/fhir+json", "Accept", "application/fhir+json"),
+        path,
+        body);
+  }
+
+  @Override
+  public ExpectedResponse post(Map<String, String> headers, String path, Object body) {
     return ExpectedResponse.of(
-        service()
-            .requestSpecification()
-            .contentType("application/fhir+json")
-            .accept("application/fhir+json")
-            .body(body)
-            .request(Method.POST, path));
+        service().requestSpecification().headers(headers).body(body).request(Method.POST, path));
   }
 }

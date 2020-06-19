@@ -41,11 +41,16 @@ public final class BasicTestClient implements TestClient {
 
   @Override
   public ExpectedResponse post(String path, Object body) {
+    return post(contentType() == null ? null : Map.of("Content-Type", contentType()), path, body);
+  }
+
+  @Override
+  public ExpectedResponse post(Map<String, String> maybeHeaders, String path, Object body) {
     try {
       return ExpectedResponse.of(
           service()
               .requestSpecification()
-              .contentType(contentType())
+              .headers(maybeHeaders == null ? Collections.emptyMap() : maybeHeaders)
               .body(mapper.get().writeValueAsString(body))
               .request(Method.POST, path));
     } catch (JsonProcessingException e) {

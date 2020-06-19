@@ -31,5 +31,7 @@ public interface TestClient {
   /** Perform a post request with the given body. */
   ExpectedResponse post(String path, Object body);
 
+  ExpectedResponse post(Map<String, String> headers, String path, Object body);
+
   ServiceDefinition service();
 }
