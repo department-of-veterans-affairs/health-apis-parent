@@ -10,10 +10,11 @@
   <packaging>pom</packaging>
   <properties>
     <docker-maven-plugin.version>0.33.0</docker-maven-plugin.version>
+    <docker.imageName>health-apis-${project.artifactId}</docker.imageName>
     <docker.organization>vasdvp</docker.organization>
     <docker.tag>latest</docker.tag>
-    <docker.imageName>health-apis-${project.artifactId}</docker.imageName>
     <jacoco.skip>true</jacoco.skip>
+    <junit-platform.version>1.6.2</junit-platform.version>
     <maven-shade-plugin.version>3.2.1</maven-shade-plugin.version>
     <process-exec-maven-plugin.version>0.7</process-exec-maven-plugin.version>
   </properties>
@@ -27,6 +28,12 @@
       <groupId>gov.va.api.health</groupId>
       <artifactId>service-auto-config</artifactId>
       <version>6.0.9-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-console-standalone</artifactId>
+      <version>${junit-platform.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
