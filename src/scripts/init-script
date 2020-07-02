@@ -40,7 +40,7 @@ checkAvailibility() {
 getJava() {
   echo "Installing Java..."
 
-  JAVA_VERSION='jdk-12.0.2'
+  JAVA_VERSION='jdk-14.0.1'
 
   [ -d "$JAVA_DIR/*" ] && $SUDO rm -r "$JAVA_DIR/*"
 
@@ -78,7 +78,7 @@ then
   SUDO='sudo'
   sudo -v
   cd /tmp/
-  JAVA_DOWNLOAD='https://download.java.net/java/GA/jdk12.0.2/e482c34c86bd4bf8b56c0b35558996b9/10/GPL/openjdk-12.0.2_linux-x64_bin.tar.gz'
+  JAVA_DOWNLOAD='https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.1%2B7/OpenJDK14U-jdk_x64_linux_hotspot_14.0.1_7.tar.gz'
   JAVA_DIR='/usr/lib/jvm'
   APACHE_DIR='/usr/lib/apache'
 
@@ -122,7 +122,7 @@ then
   command -v unzip >/dev/null
   [ $? -eq 1 ] && echo "Command not found: unzip" && exit 1
   cd ~/Downloads/
-  JAVA_DOWNLOAD='https://download.java.net/java/GA/jdk12.0.2/e482c34c86bd4bf8b56c0b35558996b9/10/GPL/openjdk-12.0.2_windows-x64_bin.zip'
+  JAVA_DOWNLOAD='https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.1%2B7/OpenJDK14U-jdk_x64_linux_hotspot_14.0.1_7.tar.gz'
   JAVA_DIR='/c/Program Files/Java'
   APACHE_DIR='/c/Program Files/Apache'
   getJava $JAVA_DOWNLOAD
