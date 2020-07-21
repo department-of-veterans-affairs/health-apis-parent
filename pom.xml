@@ -9,7 +9,7 @@
   </parent>
   <groupId>gov.va.api.health</groupId>
   <artifactId>health-apis-parent</artifactId>
-  <version>7.0.2-SNAPSHOT</version>
+  <version>7.0.2</version>
   <packaging>pom</packaging>
   <properties>
     <checkstyle.version>8.29</checkstyle.version>
