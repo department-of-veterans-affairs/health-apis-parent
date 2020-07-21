@@ -13,7 +13,7 @@
   <packaging>pom</packaging>
   <properties>
     <checkstyle.version>8.29</checkstyle.version>
-    <error-prone.version>2.3.4</error-prone.version>
+    <error-prone.version>2.4.0</error-prone.version>
     <findsecbugs-plugin.version>1.10.1</findsecbugs-plugin.version>
     <fixcrlf.excludes>**/*.png,**/*.jks,**/*.db</fixcrlf.excludes>
     <fixcrlf.includes>pom.xml,*.md,src/**</fixcrlf.includes>
