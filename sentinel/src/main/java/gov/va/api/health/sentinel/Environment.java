@@ -14,7 +14,8 @@ public enum Environment {
 
   static {
     log.info(
-        "Using {} Sentinel environment (Override with -Dsentinel=LAB|LOCAL|PROD|QA|STAGING)",
+        "Using {} Sentinel environment "
+            + "(Override with -Dsentinel=LAB|LOCAL|PRODUCTION|QA|STAGING|STAGING-LAB)",
         sentinelProperty());
   }
 
@@ -25,7 +26,8 @@ public enum Environment {
         return Environment.LAB;
       case "LOCAL":
         return Environment.LOCAL;
-      case "PROD":
+      case "PROD": // FALL-THROUGH
+      case "PRODUCTION":
         return Environment.PROD;
       case "QA":
         return Environment.QA;
