@@ -122,9 +122,7 @@
             <version>${maven-compiler-plugin.version}</version>
             <executions>
               <execution>
-                <goals>
-                  <goal>compile</goal>
-                </goals>
+                <id>default-compile</id>
                 <configuration>
                   <release>${java.version}</release>
                   <showWarnings>true</showWarnings>

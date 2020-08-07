@@ -9,7 +9,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -23,14 +22,12 @@ public class AutoConfigurationTest {
 
   @Test(expected = RuntimeException.class)
   public void boom() {
-    ResponseEntity<Fugazi> f = rest.getForEntity("/hello", Fugazi.class);
     rest.getForEntity("/boom?kaboom=kapow", Fugazi.class);
   }
 
   @Test
   public void jacksonIsEnabled() {
     log.info("{}", Fugazi.FugaziBuilder.class.getName());
-    ResponseEntity<Fugazi> f = rest.getForEntity("/hello", Fugazi.class);
-    log.info("{}", f);
+    log.info("{}", rest.getForEntity("/hello", Fugazi.class));
   }
 }
