@@ -1,5 +1,6 @@
 package gov.va.api.health.autoconfig.configuration;
 
+import gov.va.api.health.autoconfig.encryption.BasicEncryption;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -9,6 +10,8 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 import javax.net.ssl.SSLContext;
 import lombok.AllArgsConstructor;
@@ -49,31 +52,46 @@ public class SecureRestTemplateConfig {
 
   @SneakyThrows
   private static ClientHttpResponse executeAndLog(
-      HttpRequest request, byte[] body, ClientHttpRequestExecution execution) {
+      HttpRequest request,
+      byte[] body,
+      ClientHttpRequestExecution execution,
+      String loggingEncryptionKey) {
     log.info("{} {}", request.getMethod(), request.getURI());
     ClientHttpResponse response = execution.execute(request, body);
+
+    log.info(
+        "Response from {} {} is {}",
+        request.getMethod(),
+        request.getURI(),
+        response.getStatusCode());
+
     if (response.getStatusCode().isError()) {
-      log.error("--- REQUEST FAILED ---------------------------------");
-      log.error("{} {}", request.getMethod(), request.getURI());
-      log.error("Headers: {}", request.getHeaders());
-      log.error("Request Body:\n{}", new String(body, StandardCharsets.UTF_8));
-      log.error("--- RESPONSE ---------------------------------------");
-      log.error(
-          "Response: {} ({})",
-          response.getStatusCode(),
-          response.getStatusCode().getReasonPhrase());
-      log.error("Headers: {}", response.getHeaders());
-      log.error(
-          "Response Body:\n{}",
-          StreamUtils.copyToString(response.getBody(), StandardCharsets.UTF_8));
-      log.error("----------------------------------------------------");
-    } else {
-      log.info(
-          "Response from {} {} is {}",
-          request.getMethod(),
-          request.getURI(),
-          response.getStatusCode());
+      Map<String, Object> requestInfo = new HashMap<>();
+      requestInfo.put("method", request.getMethodValue());
+      requestInfo.put("uri", request.getURI());
+      requestInfo.put("headers", request.getHeaders());
+      requestInfo.put("body", new String(body, StandardCharsets.UTF_8));
+
+      Map<String, Object> responseInfo = new HashMap<>();
+      responseInfo.put("statusCode", response.getStatusCode());
+      responseInfo.put("statusCodeReason", response.getStatusCode().getReasonPhrase());
+      responseInfo.put("headers", response.getHeaders());
+      responseInfo.put(
+          "body", StreamUtils.copyToString(response.getBody(), StandardCharsets.UTF_8));
+
+      String json =
+          JacksonConfig.createMapper()
+              .writeValueAsString(Map.of("request", requestInfo, "response", responseInfo));
+
+      String logMessage =
+          loggingEncryptionKey == null
+              ? "For more information, "
+                  + "please set the property ssl.logging-encryption-key in the future."
+              : BasicEncryption.forKey(loggingEncryptionKey).encrypt(json);
+
+      log.error("REQUEST FAILED: {}", logMessage);
     }
+
     return response;
   }
 
@@ -120,7 +138,8 @@ public class SecureRestTemplateConfig {
   public RestTemplate restTemplate(@Autowired RestTemplateBuilder restTemplateBuilder) {
     return restTemplateBuilder
         .requestFactory(bufferingRequestFactory(httpClientWithSsl()))
-        .additionalInterceptors((req, body, exec) -> executeAndLog(req, body, exec))
+        .additionalInterceptors(
+            (req, body, exec) -> executeAndLog(req, body, exec, config.getLoggingEncryptionKey()))
         .build();
   }
 

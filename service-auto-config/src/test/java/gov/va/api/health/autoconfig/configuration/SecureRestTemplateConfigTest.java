@@ -11,7 +11,6 @@ import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 public class SecureRestTemplateConfigTest {
-
   @Test
   @SneakyThrows
   public void errorAreLogged() {
@@ -22,6 +21,23 @@ public class SecureRestTemplateConfigTest {
     } catch (Exception e) {
       /* This is completely expected. */
     }
+  }
+
+  @Test(expected = FailedToConfigureSsl.class)
+  @SneakyThrows
+  public void exceptionIsThrownWhenClientKeyIsWrong() {
+    tryWebRequest(
+        makeOne(
+            SslClientProperties.builder()
+                .enableClient(true)
+                .verify(true)
+                .clientKeyPassword("nope")
+                .keyStore("classpath:test-keystore.jks")
+                .keyStorePassword("secret")
+                .useTrustStore(true)
+                .trustStore("classpath:test-truststore.jks")
+                .trustStorePassword("secret")
+                .build()));
   }
 
   @Test(expected = FailedToConfigureSsl.class)

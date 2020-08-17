@@ -35,6 +35,7 @@ public class SslClientProperties {
 
   @Builder.Default private boolean enableClient = true;
   @Builder.Default private boolean verify = true;
+  private String loggingEncryptionKey;
   private String keyStore;
   private String keyStorePassword;
   private String clientKeyPassword;

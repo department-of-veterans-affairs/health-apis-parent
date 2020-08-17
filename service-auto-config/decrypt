@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR=$(readlink -f $(dirname $0))
+
+SAC_JAR=$(find $SCRIPT_DIR/target -name 'service-auto-config*.jar' | head -n +1)
+
+java -cp $SAC_JAR $SCRIPT_DIR/src/test/java/gov/va/api/health/autoconfig/encryption/Decrypter.java $@
