@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Configuration;
  * ssl.use-trust-store=true
  * ssl.trust-store=file:certs/system/DVP-NONPROD-truststore.jks
  * ssl.trust-store-password=secret
+ * ssl.logging-encryption-key=shanktopus
  * </pre>
  */
 @SuppressWarnings("DefaultAnnotationParam")

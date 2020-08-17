@@ -15,7 +15,13 @@ This mapper is configured as follows
 
 ### SecureRestTemplateConfig
 This configures RestTemplates to support SSL based on application-level configuration
-properties. Additionally, this adds logging support to requests. Properties
+properties. Additionally, this adds logging support to requests. 
+
+Should an HTTP request fail, encrypted error messages will be printed.
+You can enable this by setting `ssl.logging-encryption-key` to a secret value. 
+If not specified, no detailed information will be printed in the logs.
+
+Properties
 - `ssl.enable-client` (boolean) Whether SSL support should be enabled for clients.
 - `ssl.key-store` (resource) Location of the JKS key store to use for SSL connections
 - `ssl.key-store-password` (string) The key store password used with `ssl.key-store`
@@ -24,6 +30,10 @@ properties. Additionally, this adds logging support to requests. Properties
 - `ssl.trust-store` (resource) Location of the JKS key stores used to verify servers
 - `ssl.trust-store-password` (string) The password for `ssl.trust-store`
 - `ssl.verify` (boolean) Whether hostnames should be verified
+- `ssl.logging-encryption-key` (string) Key to use when encrypting fail messages for requests made using the SecureRestTemplate.
+  - When unset, details will be suppressed and a message indicating you should set this property will be printed instead.
+  - To decrypt the message, use the [decrypt script](./decrypt) as follows: `./decrypt <key> <encoded-message>`
+
 
 ### AutoLoggableConfiguration
 This enables automatic entry/exit logging of Spring components. 
