@@ -13,7 +13,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.Value;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class JacksonConfigTest {
 

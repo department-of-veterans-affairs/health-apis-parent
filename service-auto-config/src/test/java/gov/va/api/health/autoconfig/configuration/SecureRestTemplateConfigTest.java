@@ -5,7 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import gov.va.api.health.autoconfig.configuration.SecureRestTemplateConfig.FailedToConfigureSsl;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.web.client.RestTemplate;
 
@@ -23,85 +24,100 @@ public class SecureRestTemplateConfigTest {
     }
   }
 
-  @Test(expected = FailedToConfigureSsl.class)
+  @Test
   @SneakyThrows
   public void exceptionIsThrownWhenClientKeyIsWrong() {
-    tryWebRequest(
-        makeOne(
-            SslClientProperties.builder()
-                .enableClient(true)
-                .verify(true)
-                .clientKeyPassword("nope")
-                .keyStore("classpath:test-keystore.jks")
-                .keyStorePassword("secret")
-                .useTrustStore(true)
-                .trustStore("classpath:test-truststore.jks")
-                .trustStorePassword("secret")
-                .build()));
+    Assertions.assertThrows(
+        FailedToConfigureSsl.class,
+        () ->
+            tryWebRequest(
+                makeOne(
+                    SslClientProperties.builder()
+                        .enableClient(true)
+                        .verify(true)
+                        .clientKeyPassword("nope")
+                        .keyStore("classpath:test-keystore.jks")
+                        .keyStorePassword("secret")
+                        .useTrustStore(true)
+                        .trustStore("classpath:test-truststore.jks")
+                        .trustStorePassword("secret")
+                        .build())));
   }
 
-  @Test(expected = FailedToConfigureSsl.class)
+  @Test
   @SneakyThrows
   public void exceptionIsThrownWhenKeyStoreCannotBeFound() {
-    makeOne(
-        SslClientProperties.builder()
-            .enableClient(true)
-            .verify(true)
-            .clientKeyPassword("secret")
-            .keyStore("classpath:nope")
-            .keyStorePassword("secret")
-            .useTrustStore(true)
-            .trustStore("classpath:test-truststore.jks")
-            .trustStorePassword("secret")
-            .build());
+    Assertions.assertThrows(
+        FailedToConfigureSsl.class,
+        () ->
+            makeOne(
+                SslClientProperties.builder()
+                    .enableClient(true)
+                    .verify(true)
+                    .clientKeyPassword("secret")
+                    .keyStore("classpath:nope")
+                    .keyStorePassword("secret")
+                    .useTrustStore(true)
+                    .trustStore("classpath:test-truststore.jks")
+                    .trustStorePassword("secret")
+                    .build()));
   }
 
-  @Test(expected = FailedToConfigureSsl.class)
+  @Test
   @SneakyThrows
   public void exceptionIsThrownWhenKeyStoreCannotBeOpened() {
-    makeOne(
-        SslClientProperties.builder()
-            .enableClient(true)
-            .verify(true)
-            .clientKeyPassword("secret")
-            .keyStore("classpath:corrupt-keystore.jks")
-            .keyStorePassword("secret")
-            .useTrustStore(true)
-            .trustStore("classpath:test-truststore.jks")
-            .trustStorePassword("wrong")
-            .build());
+    Assertions.assertThrows(
+        FailedToConfigureSsl.class,
+        () ->
+            makeOne(
+                SslClientProperties.builder()
+                    .enableClient(true)
+                    .verify(true)
+                    .clientKeyPassword("secret")
+                    .keyStore("classpath:corrupt-keystore.jks")
+                    .keyStorePassword("secret")
+                    .useTrustStore(true)
+                    .trustStore("classpath:test-truststore.jks")
+                    .trustStorePassword("wrong")
+                    .build()));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   @SneakyThrows
   public void exceptionIsThrownWhenKeyStoreIsNotFileOrClasspath() {
-    makeOne(
-        SslClientProperties.builder()
-            .enableClient(true)
-            .verify(true)
-            .clientKeyPassword("secret")
-            .keyStore("http://nope.com")
-            .keyStorePassword("secret")
-            .useTrustStore(true)
-            .trustStore("classpath:test-truststore.jks")
-            .trustStorePassword("secret")
-            .build());
+    Assertions.assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            makeOne(
+                SslClientProperties.builder()
+                    .enableClient(true)
+                    .verify(true)
+                    .clientKeyPassword("secret")
+                    .keyStore("http://nope.com")
+                    .keyStorePassword("secret")
+                    .useTrustStore(true)
+                    .trustStore("classpath:test-truststore.jks")
+                    .trustStorePassword("secret")
+                    .build()));
   }
 
-  @Test(expected = FailedToConfigureSsl.class)
+  @Test
   @SneakyThrows
   public void exceptionIsThrownWhenKeyStorePasswordIsWrong() {
-    makeOne(
-        SslClientProperties.builder()
-            .enableClient(true)
-            .verify(true)
-            .clientKeyPassword("secret")
-            .keyStore("classpath:test-keystore.jks")
-            .keyStorePassword("secret")
-            .useTrustStore(true)
-            .trustStore("classpath:test-truststore.jks")
-            .trustStorePassword("wrong")
-            .build());
+    Assertions.assertThrows(
+        FailedToConfigureSsl.class,
+        () ->
+            makeOne(
+                SslClientProperties.builder()
+                    .enableClient(true)
+                    .verify(true)
+                    .clientKeyPassword("secret")
+                    .keyStore("classpath:test-keystore.jks")
+                    .keyStorePassword("secret")
+                    .useTrustStore(true)
+                    .trustStore("classpath:test-truststore.jks")
+                    .trustStorePassword("wrong")
+                    .build()));
   }
 
   @Test
