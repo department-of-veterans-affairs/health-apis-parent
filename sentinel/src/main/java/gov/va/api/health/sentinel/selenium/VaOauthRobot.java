@@ -65,11 +65,11 @@ public class VaOauthRobot {
       /* There are two different consent forms ... */
       if (findOptionalElement(driver, By.className("consent-title")).isPresent()) {
         log.info("Granting consent to access data");
-        driver.findElement(By.className("button-primary")).click();
+        driver.findElement(By.xpath("//input[@type='submit']")).click();
         waitForUrlToChange(driver, url);
       } else if (findOptionalElement(driver, By.id("sr_page_title")).isPresent()) {
         log.info("Granting consent to access data");
-        driver.findElement(By.className("btn-primary")).click();
+        driver.findElement(By.xpath("//input[@type='submit']")).click();
         waitForUrlToChange(driver, url);
       }
       waitForPageLoad(driver);
