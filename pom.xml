@@ -27,7 +27,7 @@
     <h2.version>1.4.200</h2.version>
     <jacoco-maven-plugin.version>0.8.5</jacoco-maven-plugin.version>
     <jacoco.coverage>0.95</jacoco.coverage>
-    <jarranger.version>1.0.2</jarranger.version>
+    <jarranger.version>1.0.5</jarranger.version>
     <java.version>14</java.version>
     <lombok.version>1.18.12</lombok.version>
     <maven-checkstyle-plugin.version>3.1.0</maven-checkstyle-plugin.version>
