@@ -10,7 +10,7 @@ This project provides starter POMs and shared libraries for Health APIs
 ----
 
 ## Building
-- [Java Development Kit](https://openjdk.java.net/) 12
+- [Java Development Kit](https://adoptopenjdk.net/releases) 14
 - [Maven](http://maven.apache.org/) 3.6
 - Recommended [IntelliJ](https://www.jetbrains.com/idea/)
   or [Eclipse](https://www.eclipse.org/downloads/packages/installer)
