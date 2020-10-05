@@ -19,7 +19,7 @@
     <fixcrlf.includes>pom.xml,*.md,src/**</fixcrlf.includes>
     <fmt-maven-plugin.version>2.10</fmt-maven-plugin.version>
     <formatter-maven-plugin.version>2.11.0</formatter-maven-plugin.version>
-    <git.allowedBranchNames><![CDATA[^(dependabot/.*|master|release/.*|PR-[0-9]+|(.*/)?[A-Z]{2,10}-[0-9]+-.*)$]]></git.allowedBranchNames>
+    <git.allowedBranchNames><![CDATA[^(dependabot/.*|main|master|release/.*|PR-[0-9]+|(.*/)?[A-Z]{2,10}-[0-9]+-.*)$]]></git.allowedBranchNames>
     <git.enforceBranchNames>true</git.enforceBranchNames>
     <gmavenplus-plugin.version>1.8.1</gmavenplus-plugin.version>
     <google-java-format.version>1.8</google-java-format.version>
