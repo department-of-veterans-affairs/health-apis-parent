@@ -11,7 +11,6 @@
     <Class name="gov.va.api.health.autoconfig.configuration.SecureRestTemplateConfig"/>
     <Bug pattern="URLCONNECTION_SSRF_FD"/>
   </Match>
-
   <!--
   This finding is reported when data being logged comes from an 'untrusted' source. In this instance,
   the finding is being cause by adding the request made into the log message. The suggested solution is
@@ -21,5 +20,14 @@
   <Match>
     <Class name="gov.va.api.health.autoconfig.logging.MethodExecutionLogger"/>
     <Bug pattern="CRLF_INJECTION_LOGS"/>
+  </Match>
+  <!--
+  False positive. The filter is not using "user" provided data to determine the filter location.
+  It's using application configuration which strips know path elements, e.g. The application is
+  configured such that /kill/me/ok is stripped to just /ok. The user cannot control this.
+  -->
+  <Match>
+    <Class name="gov.va.api.health.autoconfig.rest.PathRewriteFilter"/>
+    <Bug pattern="REQUESTDISPATCHER_FILE_DISCLOSURE"/>
   </Match>
 </FindBugsFilter>
