@@ -18,6 +18,8 @@ import org.springframework.test.context.TestPropertySource;
 public class AutoConfigurationTest {
   @Autowired TestRestTemplate rest;
 
+  @Autowired FugaziComponent component;
+
   @Test
   public void boom() {
     Assertions.assertThrows(
@@ -28,5 +30,12 @@ public class AutoConfigurationTest {
   public void jacksonIsEnabled() {
     log.info("{}", Fugazi.FugaziBuilder.class.getName());
     log.info("{}", rest.getForEntity("/hello", Fugazi.class));
+  }
+
+  @Test
+  public void redactedLogging() {
+    log.info(
+        "{}",
+        rest.getForEntity("/say-hi?name=me&secret=shh&alsoSecret=a&alsoSecret=b", String.class));
   }
 }

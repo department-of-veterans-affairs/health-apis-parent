@@ -1,17 +1,20 @@
 package gov.va.api.health.autoconfig.logging;
 
 import static gov.va.api.health.autoconfig.logging.LogSanitizer.sanitize;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.va.api.health.autoconfig.configuration.JacksonConfig;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,6 +30,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -81,7 +85,6 @@ public class MethodExecutionLogger {
    */
   @Value
   private static class Context implements AutoCloseable {
-
     ProceedingJoinPoint point;
 
     long start;
@@ -99,6 +102,9 @@ public class MethodExecutionLogger {
     @Delegate SharedState state;
 
     HttpServletRequest request;
+
+    /** Parameter index to HTTP request parameter name. */
+    Map<Integer, String> redactedParameters;
 
     /**
      * Create a new context extracting information from the point. This context will use or set it's
@@ -128,13 +134,12 @@ public class MethodExecutionLogger {
         startOfLoggingChain = false;
         state.levelUp();
       }
+      redactedParameters = determineRedactedParameters();
     }
 
     /** If method arguments are enabled, return them. Otherwise return an empty string. */
     String argumentsAsString() {
-      return logArguments()
-          ? Stream.of(point.getArgs()).map(String::valueOf).collect(Collectors.joining(","))
-          : "";
+      return logArguments() ? String.join(",", getPrintableArguments()) : "";
     }
 
     /**
@@ -151,6 +156,33 @@ public class MethodExecutionLogger {
     }
 
     /**
+     * Build a mapping from parameter position to request parameter name that should be redacted.
+     */
+    private Map<Integer, String> determineRedactedParameters() {
+      Parameter[] parameters = method.getParameters();
+      Map<Integer, String> redacted = new HashMap<>(parameters.length);
+      int index = 0;
+      for (Parameter p : parameters) {
+        if (p.getAnnotation(Redact.class) != null) {
+          var requestParam = p.getAnnotation(RequestParam.class);
+          String name = null;
+          if (requestParam != null) {
+            name = requestParam.value();
+            if (isBlank(name)) {
+              name = requestParam.name();
+            }
+          }
+          if (isBlank(name)) {
+            name = p.getName();
+          }
+          redacted.put(index, name);
+        }
+        index++;
+      }
+      return redacted;
+    }
+
+    /**
      * If exceptions are enabled and thrown is set, convert it to a simple string. Otherwise return
      * empty.
      */
@@ -164,6 +196,16 @@ public class MethodExecutionLogger {
      */
     String exceptionTypeAsString(Throwable thrown) {
       return thrown != null && logException() ? thrown.getClass().getSimpleName() : "";
+    }
+
+    private List<String> getPrintableArguments() {
+      Object[] arguments = point.getArgs();
+      List<String> printableArguments = new ArrayList<>(arguments.length);
+      for (int i = 0; i < arguments.length; i++) {
+        printableArguments.add(
+            redactedParameters.containsKey(i) ? "***" : String.valueOf(arguments[i]));
+      }
+      return printableArguments;
     }
 
     /** Log, or defer logging the message. This uses SLF4J logger semantics. */
@@ -216,8 +258,22 @@ public class MethodExecutionLogger {
         return "";
       }
       String uri = request.getRequestURI();
-      String query = request.getQueryString();
 
+      String query;
+      if (redactedParameters.isEmpty()) {
+        query = request.getQueryString();
+      } else {
+        var redacted = new HashSet<>(redactedParameters.values());
+        var printableRequestParams = new ArrayList<String>();
+        var requestParams = request.getParameterMap();
+        requestParams.forEach(
+            (name, values) -> {
+              for (var value : values) {
+                printableRequestParams.add(name + "=" + (redacted.contains(name) ? "***" : value));
+              }
+            });
+        query = String.join(",", printableRequestParams);
+      }
       return query == null ? uri : uri + "?" + query;
     }
 
@@ -239,7 +295,9 @@ public class MethodExecutionLogger {
   @AllArgsConstructor
   private static class DeferredLog {
     Logger logger;
+
     String message;
+
     Object[] args;
 
     void logNow() {
@@ -294,14 +352,13 @@ public class MethodExecutionLogger {
 
   @Getter
   private static class SharedState {
-
     private final String id;
 
+    private final Deque<String> timings;
+
+    private final List<DeferredLog> deferredLogs;
+
     private int level;
-
-    private Deque<String> timings;
-
-    private List<DeferredLog> deferredLogs;
 
     @Setter private boolean error;
 
