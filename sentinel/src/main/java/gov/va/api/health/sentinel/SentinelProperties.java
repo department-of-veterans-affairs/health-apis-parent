@@ -60,10 +60,7 @@ public final class SentinelProperties {
       }
     }
     log.infoOnce(
-        "Using {} for {} (Override with -D{}=<number>)",
-        value,
-        fullPropertyName,
-        fullPropertyName);
+        "Using {} for {} (Override with -D{}=<number>)", value, fullPropertyName, fullPropertyName);
     return value;
   }
 
