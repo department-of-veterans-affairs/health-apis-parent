@@ -17,7 +17,6 @@ import gov.va.api.health.sentinel.selenium.VaOauthRobot.Configuration.Authorizat
 import gov.va.api.health.sentinel.selenium.VaOauthRobot.Configuration.UserCredentials;
 import gov.va.api.health.sentinel.selenium.VaOauthRobot.OAuthCredentialsMode;
 import gov.va.api.health.sentinel.selenium.VaOauthRobot.OAuthCredentialsType;
-import gov.va.api.health.sentinel.selenium.VaOauthRobot.TokenExchange;
 import io.restassured.RestAssured;
 import java.io.File;
 import java.io.FileInputStream;
@@ -337,7 +336,7 @@ public class LabBot {
 
     UserCredentials user;
 
-    TokenExchange tokenExchange;
+    VaOauthRobot.TokenExchange tokenExchange;
 
     VaOauthRobot vaOauthRobot;
 

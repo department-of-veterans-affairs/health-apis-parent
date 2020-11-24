@@ -15,7 +15,10 @@
   </Match>
   <!-- Path is determined by test class and not user controlled -->
   <Match>
+    <Or>
     <Class name="gov.va.api.health.sentinel.LabBot$Config"/>
+    <Class name="gov.va.api.health.sentinel.OauthRobotProperties"/>
+    </Or>
     <Bug pattern="PATH_TRAVERSAL_IN"/>
   </Match>
 </FindBugsFilter>
