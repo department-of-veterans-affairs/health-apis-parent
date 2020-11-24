@@ -61,7 +61,7 @@ public final class SentinelProperties {
     }
     log.infoOnce(
         "Using {} for {} (Override with -D{}=<number>)",
-        defaultValue,
+        value,
         fullPropertyName,
         fullPropertyName);
     return value;
