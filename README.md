@@ -45,7 +45,7 @@ git secrets --register-aws
 git secrets --add-provider -- cat .git-secrets-patterns
 ```
 
-> ###### !!?? Mac users
+> ###### Mac users
 > If using [Homebrew](https://brew.sh/), use `brew install --HEAD git-secrets` as decribed
 > by [this post](https://github.com/awslabs/git-secrets/issues/65#issuecomment-416382565) to
 > avoid issues committing multiple files.
