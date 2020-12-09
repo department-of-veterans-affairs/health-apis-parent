@@ -69,7 +69,7 @@ public class VaOauthRobot {
         waitForUrlToChange(driver, url);
       } else if (findOptionalElement(driver, By.id("sr_page_title")).isPresent()) {
         log.info("Granting consent to access data");
-        driver.findElement(By.xpath("//input[@type='submit']")).click();
+        driver.findElement(By.className("btn-primary")).click();
         waitForUrlToChange(driver, url);
       }
       waitForPageLoad(driver);
