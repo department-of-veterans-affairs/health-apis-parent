@@ -28,6 +28,9 @@ public class ExpectedResponse {
   /** What should happen when logging failures. By default, everything will be logged. */
   private Consumer<Response> logAction;
 
+  /** Mapper for deserializing responses. */
+  private ObjectMapper mapper;
+
   /** The default logging action that logs everything. */
   public static Consumer<Response> logAll() {
     return r -> r.then().log().all();
@@ -48,7 +51,11 @@ public class ExpectedResponse {
 
   /** Create a new instance that will log all on a failure. */
   public static ExpectedResponse of(Response response) {
-    return of(response, logAll());
+    return of(response, logAll(), JacksonConfig.createMapper());
+  }
+
+  public static ExpectedResponse of(Response response, Consumer<Response> logAction) {
+    return of(response, logAction, JacksonConfig.createMapper());
   }
 
   /** Expect the HTTP status code to be the given value. */
@@ -62,26 +69,19 @@ public class ExpectedResponse {
     return this;
   }
 
-  /**
-   * Expect the body to be JSON represented by the given type, using the project standard {@link
-   * JacksonConfig} object mapper.
-   */
+  /** Expect the body to be JSON represented by the given type. */
   private <T> T expect(Class<T> type) {
     try {
-      return JacksonConfig.createMapper().readValue(response().asByteArray(), type);
+      return mapper.readValue(response().asByteArray(), type);
     } catch (IOException e) {
       log();
       throw new AssertionError("Failed to parse JSON body", e);
     }
   }
 
-  /**
-   * Expect the body to be a JSON list represented by the given type, using the project standard
-   * {@link JacksonConfig} object mapper.
-   */
+  /** Expect the body to be a JSON list of the given type. */
   public <T> List<T> expectListOf(Class<T> type) {
     try {
-      ObjectMapper mapper = JacksonConfig.createMapper();
       return mapper.readValue(
           response().asByteArray(),
           mapper.getTypeFactory().constructCollectionType(List.class, type));
@@ -91,10 +91,7 @@ public class ExpectedResponse {
     }
   }
 
-  /**
-   * Expect the body to be JSON represented by the given type, using the project standard {@link
-   * JacksonConfig} object mapper, then perform Javax Validation against it.
-   */
+  /** Expect the body to be JSON of the given type, then perform Java Bean validation against it. */
   public <T> T expectValid(Class<T> type) {
     T payload = expect(type);
     Set<ConstraintViolation<T>> violations =
