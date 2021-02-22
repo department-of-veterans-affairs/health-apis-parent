@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -101,7 +102,7 @@ public class MethodExecutionLogger {
 
     @Delegate SharedState state;
 
-    HttpServletRequest request;
+    Optional<HttpServletRequest> request;
 
     /** Parameter index to HTTP request parameter name. */
     Map<Integer, String> redactedParameters;
@@ -117,8 +118,15 @@ public class MethodExecutionLogger {
       logger = LoggerFactory.getLogger(declaringType);
       method = ((MethodSignature) point.getSignature()).getMethod();
       annotation = method.getAnnotation(Loggable.class);
-      request =
-          ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+      HttpServletRequest maybeRequest = null;
+      try {
+        maybeRequest =
+            ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
+                .getRequest();
+      } catch (Exception e) {
+        // Could not find request, probably on a parallel stream thread.
+      }
+      request = Optional.ofNullable(maybeRequest);
       /*
        * The ID and level need to be determined based on the thread. The ID and previous level may
        * have already be set by an earlier loggable method or this could the be first. If available,
@@ -254,18 +262,18 @@ public class MethodExecutionLogger {
     /** Get the request URI for logging. */
     String requestUri() {
       // We don't want this printed every time we ENTER somewhere. Do it only on the top level.
-      if (state.level() != 1) {
+      if (request.isEmpty() || state.level() != 1) {
         return "";
       }
-      String uri = request.getRequestURI();
+      String uri = request.get().getRequestURI();
 
       String query;
       if (redactedParameters.isEmpty()) {
-        query = request.getQueryString();
+        query = request.get().getQueryString();
       } else {
         var redacted = new HashSet<>(redactedParameters.values());
         var printableRequestParams = new ArrayList<String>();
-        var requestParams = request.getParameterMap();
+        var requestParams = request.get().getParameterMap();
         requestParams.forEach(
             (name, values) -> {
               for (var value : values) {
