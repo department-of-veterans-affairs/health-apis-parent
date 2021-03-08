@@ -419,8 +419,10 @@
                     slurper.setFeature("http://xml.org/sax/features/namespaces", false)
                     slurper.setFeature('http://apache.org/xml/features/disallow-doctype-decl',false)
                     def xml = slurper.parse(report)
-                    xml.package.each { p ->
-                      p.class.each { c -> coverageOf("${c.@name}".replace('/','.'), c.counter) }
+                    xml.package.sort{a,b->a.@name.toString()<=>b.@name.toString()}.each {
+                      p -> p.class.sort{a,b->a.@name.toString()<=>b.@name.toString()}.each {
+                        c -> coverageOf("${c.@name}".replace('/','.'), c.counter)
+                      }
                     }
                     coverageOf("Total",xml.counter)
                     def expected = ((raw.toDouble())*100).toInteger().toString()
